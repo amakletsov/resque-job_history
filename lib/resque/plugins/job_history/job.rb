@@ -20,6 +20,14 @@ module Resque
           "#{job_history_base_key}.#{job_id}"
         end
 
+        def worker_host
+          stored_values[:hostname]
+        end
+
+        def worker_pid
+          stored_values[:pid]
+        end
+
         def start_time
           stored_values[:start_time].try(:to_time)
         end
@@ -94,6 +102,14 @@ module Resque
           finish
         end
 
+        def kill
+          puts "Request to kill #{worker_host}:#{worker_pid}"
+          return false unless worker_pid.to_i.positive?
+
+          redis.lpush("cutting_block_#{worker_host}", worker_pid) rescue false
+          redis.expire("cutting_block_#{worker_host}", 60) # 1 minute
+        end
+
         def retry
           return unless described_class
 
@@ -136,8 +152,13 @@ module Resque
         end
 
         def record_job_start(*args)
+          hostname = `hostname`[0..-2]
+          pid = Process.pid
+
           redis.hset(job_key, "start_time", Time.now.utc.to_s)
           redis.hset(job_key, "args", encode_args(*args))
+          redis.hset(job_key, "hostname", hostname)
+          redis.hset(job_key, "pid", pid)
 
           reset
         end

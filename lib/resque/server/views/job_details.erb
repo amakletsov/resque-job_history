@@ -70,7 +70,7 @@
 <% unless job_details.finished? %>
   <form method="POST" action="<%= u("job history/cancel_job") %>?<%=
     { class_name: @job_class_name, job_id: @job_id }.to_param %>">
-    <input type="submit" name="" value="Job is not running - Cancel job"/>
+    <input type="submit" name="" value="KILL JOB"/>
   </form>
 <% end %>
 

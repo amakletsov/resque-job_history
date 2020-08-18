@@ -151,10 +151,10 @@ module Resque
       def cancel_job(base)
         base.class_eval do
           post "/job history/cancel_job" do
-            Resque::Plugins::JobHistory::Job.new(params[:class_name], params[:job_id]).cancel
+            Resque::Plugins::JobHistory::Job.new(params[:class_name], params[:job_id]).kill
+            sleep(3) # Let resque-pool try to kill the job before redirecting
 
-            redirect u("job history/job_details?#{{ class_name: params[:class_name],
-                                                    job_id:     params[:job_id] }.to_param}")
+            redirect u("job history/job_class_details?#{{ class_name: params[:class_name] }.to_param}")
           end
         end
       end
